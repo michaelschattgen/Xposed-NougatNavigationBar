@@ -1,6 +1,7 @@
 package reverb.com.nougatnavigationbar;
 
 import android.content.res.Resources;
+import android.content.res.XModuleResources;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.widget.ImageView;
@@ -12,6 +13,7 @@ import javax.xml.xpath.XPath;
 
 import de.robv.android.xposed.IXposedHookInitPackageResources;
 import de.robv.android.xposed.IXposedHookLoadPackage;
+import de.robv.android.xposed.IXposedHookZygoteInit;
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.XposedHelpers;
@@ -19,7 +21,15 @@ import de.robv.android.xposed.callbacks.XC_InitPackageResources;
 import de.robv.android.xposed.callbacks.XC_LayoutInflated;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
-public class XposedMod implements IXposedHookLoadPackage {
+public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit, IXposedHookInitPackageResources {
+    private static String MODULE_PATH = null;
+    public int fakeHomeResId;
+
+    @Override
+    public void initZygote(StartupParam startupParam) throws Throwable {
+        MODULE_PATH = startupParam.modulePath;
+    }
+
 
     @Override
     public void handleLoadPackage(XC_LoadPackage.LoadPackageParam loadPackageParam) throws Throwable {
@@ -46,7 +56,7 @@ public class XposedMod implements IXposedHookLoadPackage {
             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                 try{
                     ImageView imageView = (ImageView) XposedHelpers.callMethod(param.thisObject, "getHomeButton");
-                    imageView.setImageResource(R.drawable.down);
+                    imageView.setImageResource(fakeHomeResId);
                 } catch (NoSuchMethodError e2) {
                     // Custom rom maybe?
                     return;
@@ -62,13 +72,21 @@ public class XposedMod implements IXposedHookLoadPackage {
                 @Override
                 protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                     try{
-                        XposedHelpers.setObjectField(param.thisObject, "mHomeIcon", R.drawable.down);
-                        XposedHelpers.setObjectField(param.thisObject, "mHomeLandIcon", R.drawable.down);
+                        XposedHelpers.setObjectField(param.thisObject, "mHomeIcon", fakeHomeResId);
+                        XposedHelpers.setObjectField(param.thisObject, "mHomeLandIcon", fakeHomeResId);
                     } catch (NoSuchFieldError e) {
 
                     }
                 }
             });
         }
+    }
+
+    public void handleInitPackageResources(XC_InitPackageResources.InitPackageResourcesParam resparam) throws Throwable {
+        if (!resparam.packageName.equals("com.android.systemui"))
+            return;
+
+        XModuleResources modRes = XModuleResources.createInstance(MODULE_PATH, resparam.res);
+        fakeHomeResId = resparam.res.addResource(modRes, R.drawable.sh_home);
     }
 }
