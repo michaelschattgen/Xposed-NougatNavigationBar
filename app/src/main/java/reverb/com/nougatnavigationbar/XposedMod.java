@@ -23,7 +23,7 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit, IXposedHookInitPackageResources {
     private static String MODULE_PATH = null;
-    public int fakeHomeResId, fakeRecentsResId;
+    public int fakeHomeResId, fakeRecentsResId, fakeBackResId;
 
     @Override
     public void initZygote(StartupParam startupParam) throws Throwable {
@@ -60,6 +60,9 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit,
 
                     imageView = (ImageView) XposedHelpers.callMethod(param.thisObject, "getRecentsButton");
                     imageView.setImageResource(fakeRecentsResId);
+
+                    imageView = (ImageView) XposedHelpers.callMethod(param.thisObject, "getBackButton");
+                    imageView.setImageResource(fakeBackResId);
                 } catch (NoSuchMethodError e2) {
                     // Custom rom maybe?
                     return;
@@ -80,6 +83,9 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit,
 
                         XposedHelpers.setObjectField(param.thisObject, "mRecentIcon", fakeRecentsResId);
                         XposedHelpers.setObjectField(param.thisObject, "mRecentLandIcon", fakeRecentsResId);
+
+                        XposedHelpers.setObjectField(param.thisObject, "mBackIcon", fakeBackResId);
+                        XposedHelpers.setObjectField(param.thisObject, "mBackLandIcon", fakeBackResId);
                     } catch (NoSuchFieldError e) {
 
                     }
@@ -95,5 +101,6 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit,
         XModuleResources modRes = XModuleResources.createInstance(MODULE_PATH, resparam.res);
         fakeHomeResId = resparam.res.addResource(modRes, R.drawable.sh_home);
         fakeRecentsResId = resparam.res.addResource(modRes, R.drawable.sh_recents);
+        fakeBackResId = resparam.res.addResource(modRes, R.drawable.sh_back);
     }
 }
