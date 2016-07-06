@@ -23,7 +23,7 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit, IXposedHookInitPackageResources {
     private static String MODULE_PATH = null;
-    public int fakeHomeResId;
+    public int fakeHomeResId, fakeRecentsResId;
 
     @Override
     public void initZygote(StartupParam startupParam) throws Throwable {
@@ -57,6 +57,9 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit,
                 try{
                     ImageView imageView = (ImageView) XposedHelpers.callMethod(param.thisObject, "getHomeButton");
                     imageView.setImageResource(fakeHomeResId);
+
+                    imageView = (ImageView) XposedHelpers.callMethod(param.thisObject, "getRecentsButton");
+                    imageView.setImageResource(fakeRecentsResId);
                 } catch (NoSuchMethodError e2) {
                     // Custom rom maybe?
                     return;
@@ -74,6 +77,9 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit,
                     try{
                         XposedHelpers.setObjectField(param.thisObject, "mHomeIcon", fakeHomeResId);
                         XposedHelpers.setObjectField(param.thisObject, "mHomeLandIcon", fakeHomeResId);
+
+                        XposedHelpers.setObjectField(param.thisObject, "mRecentIcon", fakeRecentsResId);
+                        XposedHelpers.setObjectField(param.thisObject, "mRecentLandIcon", fakeRecentsResId);
                     } catch (NoSuchFieldError e) {
 
                     }
@@ -88,5 +94,6 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit,
 
         XModuleResources modRes = XModuleResources.createInstance(MODULE_PATH, resparam.res);
         fakeHomeResId = resparam.res.addResource(modRes, R.drawable.sh_home);
+        fakeRecentsResId = resparam.res.addResource(modRes, R.drawable.sh_recents);
     }
 }
