@@ -2,6 +2,7 @@ package reverb.com.nougatnavigationbar;
 
 import android.content.res.Resources;
 import android.content.res.XModuleResources;
+import android.content.res.XResForwarder;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.widget.ImageView;
@@ -33,64 +34,8 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit,
 
     @Override
     public void handleLoadPackage(XC_LoadPackage.LoadPackageParam loadPackageParam) throws Throwable {
-        XposedBridge.log("we are in SystemUI!");
         if(!loadPackageParam.packageName.equals("com.android.systemui")) {
             return;
-        }
-
-        boolean isLgDevice = Build.MANUFACTURER.toLowerCase(Locale.getDefault()).equals("lge");
-        Class<?> NavigationBarView = null;
-
-        if(isLgDevice) {
-            try {
-                NavigationBarView = XposedHelpers.findClass("com.android.systemui.statusbar.phone.LGNavigationBarView", loadPackageParam.classLoader);
-            } catch (XposedHelpers.ClassNotFoundError e) {
-                NavigationBarView = XposedHelpers.findClass("com.android.systemui.statusbar.phone.NavigationBarView", loadPackageParam.classLoader);
-            }
-        } else {
-            NavigationBarView = XposedHelpers.findClass("com.android.systemui.statusbar.phone.NavigationBarView", loadPackageParam.classLoader);
-        }
-
-        XC_MethodHook methodHook = new XC_MethodHook() {
-            @Override
-            protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                try{
-                    ImageView imageView = (ImageView) XposedHelpers.callMethod(param.thisObject, "getHomeButton");
-                    imageView.setImageResource(fakeHomeResId);
-
-                    imageView = (ImageView) XposedHelpers.callMethod(param.thisObject, "getRecentsButton");
-                    imageView.setImageResource(fakeRecentsResId);
-
-                    imageView = (ImageView) XposedHelpers.callMethod(param.thisObject, "getBackButton");
-                    imageView.setImageResource(fakeBackResId);
-                } catch (NoSuchMethodError e2) {
-                    // Custom rom maybe?
-                    return;
-                }
-            }
-        };
-
-        XposedHelpers.findAndHookMethod(NavigationBarView, "onFinishInflate", methodHook);
-        XposedHelpers.findAndHookMethod(NavigationBarView, "reorient", methodHook);
-
-        if(!isLgDevice){
-            XposedHelpers.findAndHookMethod(NavigationBarView, "getIcons", Resources.class, new XC_MethodHook() {
-                @Override
-                protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                    try{
-                        XposedHelpers.setObjectField(param.thisObject, "mHomeIcon", fakeHomeResId);
-                        XposedHelpers.setObjectField(param.thisObject, "mHomeLandIcon", fakeHomeResId);
-
-                        XposedHelpers.setObjectField(param.thisObject, "mRecentIcon", fakeRecentsResId);
-                        XposedHelpers.setObjectField(param.thisObject, "mRecentLandIcon", fakeRecentsResId);
-
-                        XposedHelpers.setObjectField(param.thisObject, "mBackIcon", fakeBackResId);
-                        XposedHelpers.setObjectField(param.thisObject, "mBackLandIcon", fakeBackResId);
-                    } catch (NoSuchFieldError e) {
-
-                    }
-                }
-            });
         }
     }
 
@@ -99,8 +44,61 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit,
             return;
 
         XModuleResources modRes = XModuleResources.createInstance(MODULE_PATH, resparam.res);
-        fakeHomeResId = resparam.res.addResource(modRes, R.drawable.sh_home);
+        /*fakeHomeResId = resparam.res.addResource(modRes, R.drawable.sh_home);
         fakeRecentsResId = resparam.res.addResource(modRes, R.drawable.sh_recents);
-        fakeBackResId = resparam.res.addResource(modRes, R.drawable.sh_back);
+        fakeBackResId = resparam.res.addResource(modRes, R.drawable.sh_back);*/
+
+        XResForwarder homeButton = modRes.fwd(R.drawable.sh_home);
+        XResForwarder recentButton = modRes.fwd(R.drawable.sh_recents);
+        XResForwarder backButton = modRes.fwd(R.drawable.sh_back);
+
+        try {
+            /*try {
+                resparam.res.setReplacement("com.android.systemui", "drawable", "ic_sysbar_back_ime", modRes.fwd(down));
+            } catch (Exception e) {
+            }*/
+            try {
+                resparam.res.setReplacement("com.android.systemui", "drawable", "ic_sysbar_back", backButton);
+            } catch (Exception e) {
+            }
+            /*try {
+                resparam.res.setReplacement("com.android.systemui", "drawable", "ic_sysbar_back_ime_land", modRes.fwd(down));
+            } catch (Exception e) {
+            }
+*/
+            try {
+                resparam.res.setReplacement("com.android.systemui", "drawable", "ic_sysbar_back_land", backButton);
+            } catch (Exception e) {
+            }
+            try {
+                resparam.res.setReplacement("com.android.systemui", "drawable", "ic_sysbar_back_side", backButton);
+            } catch (Exception e) {
+            }
+
+            try {
+                resparam.res.setReplacement("com.android.systemui", "drawable", "ic_sysbar_home_land", homeButton);
+            } catch (Exception e) {
+            }
+
+            try {
+                resparam.res.setReplacement("com.android.systemui", "drawable", "ic_sysbar_recent", recentButton);
+            } catch (Exception e) {
+            }
+            try {
+                resparam.res.setReplacement("com.android.systemui", "drawable", "ic_sysbar_recent_land", recentButton);
+            } catch (Exception e) {
+            }
+            try {
+                resparam.res.setReplacement("com.android.systemui", "drawable", "ic_sysbar_recent_side", recentButton);
+            } catch (Exception e) {
+            }
+
+            try {
+                resparam.res.setReplacement("com.android.systemui", "drawable", "ic_sysbar_home", homeButton);
+            } catch (Exception e) {
+            }
+        } catch (Exception e){
+
+        }
     }
 }
