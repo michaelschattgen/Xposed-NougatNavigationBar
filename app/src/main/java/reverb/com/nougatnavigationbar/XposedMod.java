@@ -51,21 +51,22 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit,
         XResForwarder homeButton = modRes.fwd(R.drawable.sh_home);
         XResForwarder recentButton = modRes.fwd(R.drawable.sh_recents);
         XResForwarder backButton = modRes.fwd(R.drawable.sh_back);
+        XResForwarder downButton = modRes.fwd(R.drawable.sh_down);
 
         try {
-            /*try {
-                resparam.res.setReplacement("com.android.systemui", "drawable", "ic_sysbar_back_ime", modRes.fwd(down));
+            try {
+                resparam.res.setReplacement("com.android.systemui", "drawable", "ic_sysbar_back_ime", downButton);
             } catch (Exception e) {
-            }*/
+            }
             try {
                 resparam.res.setReplacement("com.android.systemui", "drawable", "ic_sysbar_back", backButton);
             } catch (Exception e) {
             }
-            /*try {
-                resparam.res.setReplacement("com.android.systemui", "drawable", "ic_sysbar_back_ime_land", modRes.fwd(down));
+            try {
+                resparam.res.setReplacement("com.android.systemui", "drawable", "ic_sysbar_back_ime_land", downButton);
             } catch (Exception e) {
             }
-*/
+
             try {
                 resparam.res.setReplacement("com.android.systemui", "drawable", "ic_sysbar_back_land", backButton);
             } catch (Exception e) {
